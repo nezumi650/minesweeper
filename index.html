@@ -30,7 +30,7 @@
         value="hard"
         onchange="changeLebel(this)"
       /><label for="lebel-hard">hard</label><br />
-      💣 <span id="leftBombCount"></span>
+      💣<span id="leftBombCount"></span> <span onclick="start()">🔄</span>
     </p>
     <table id="field" border="5" align="center"></table>
     <p align="center">左クリック：掘る / 右クリック：🚩</p>
@@ -115,9 +115,10 @@
         }
 
         const marquee = document.createElement('marquee');
+        marquee.id = 'marquee';
         marquee.loop = 1;
         marquee.setAttribute('scrollamount', '450');
-        marquee.style = 'position: absolute; left: 0px; top: 0px;';
+        marquee.style = 'position: absolute; left: 0px; top: 60px;';
 
         const innerText = document.createElement('font');
         innerText.style = 'font-size: 2000%; font-weight: 900; color: red';
@@ -184,6 +185,10 @@
 
         let fragment = document.createDocumentFragment();
         document.getElementById('field').textContent = '';
+        const marquee = document.getElementById('marquee');
+        if (marquee) {
+          document.body.removeChild(marquee);
+        }
         Object.keys(valueMaster).forEach(function(id) {
           const td = document.createElement('td');
           td.id = id;
