@@ -9,24 +9,27 @@
   <body>
     <p align="center">
       <input
+        id="lebel-easy"
         type="radio"
         name="lebel"
         value="easy"
         onchange="changeLebel(this)"
         checked="checked"
-      />easy
+      /><label for="lebel-easy">easy</label>
       <input
+        id="lebel-nomal"
         type="radio"
         name="lebel"
         value="nomal"
         onchange="changeLebel(this)"
-      />nomal
+      /><label for="lebel-nomal">nomal</label>
       <input
+        id="lebel-hard"
         type="radio"
         name="lebel"
         value="hard"
         onchange="changeLebel(this)"
-      />hard <br />
+      /><label for="lebel-hard">hard</label><br />
       💣 <span id="leftBombCount"></span>
     </p>
     <table id="field" border="5" align="center"></table>
