@@ -1,0 +1,229 @@
+<html>
+  <head>
+    <title>マインスイーパー</title>
+    <link
+      rel="shortcut icon"
+      href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/198/bomb_1f4a3.png"
+    />
+  </head>
+  <body>
+    <p align="center">
+      <input
+        type="radio"
+        name="lebel"
+        value="easy"
+        onchange="changeLebel(this)"
+        checked="checked"
+      />easy
+      <input
+        type="radio"
+        name="lebel"
+        value="nomal"
+        onchange="changeLebel(this)"
+      />nomal
+      <input
+        type="radio"
+        name="lebel"
+        value="hard"
+        onchange="changeLebel(this)"
+      />hard <br />
+      💣 <span id="leftBombCount"></span>
+    </p>
+    <table id="field" border="5" align="center"></table>
+    <p align="center">左クリック：掘る / 右クリック：🚩</p>
+    <script>
+      const LEBEL_SETTINGS = {
+        easy: {
+          tableSize: 9,
+          bombCount: 8
+        },
+        nomal: {
+          tableSize: 16,
+          bombCount: 40
+        },
+        hard: {
+          tableSize: 20,
+          bombCount: 80
+        }
+      };
+      const BOMB_ICON = '💣';
+      const FLAG_ICON = '🚩';
+
+      let tableSize = LEBEL_SETTINGS['easy']['tableSize'];
+      let bombCount = LEBEL_SETTINGS['easy']['bombCount'];
+      let valueMaster = {};
+
+      const changeLebel = function(obj) {
+        tableSize = LEBEL_SETTINGS[obj.value]['tableSize'];
+        bombCount = LEBEL_SETTINGS[obj.value]['bombCount'];
+        start();
+      };
+
+      const openCell = function(id) {
+        const cell = document.getElementById(id);
+        const value = valueMaster[id];
+        cell.innerText = value;
+        cell.style.backgroundColor = 'white';
+        cell.classList.remove('close');
+        cell.classList.remove('flag');
+        cell.onclick = '';
+        cell.oncontextmenu = function() {
+          return false;
+        };
+
+        if (value === BOMB_ICON) {
+          cell.style.backgroundColor = 'red';
+          cell.classList.add('bomb');
+        } else if (!value) {
+          _openNeighborCells(id);
+        }
+        turnEnd();
+      };
+
+      const _openNeighborCells = function(id) {
+        getNeighborIds(id).forEach(function(neighborId) {
+          if (document.getElementById(neighborId).classList.contains('close')) {
+            openCell(neighborId);
+          }
+        });
+      };
+
+      const flagCell = function(id) {
+        const cell = document.getElementById(id);
+        cell.classList.toggle('flag');
+        cell.classList.toggle('close');
+
+        const isFlagged = cell.classList.contains('flag');
+        cell.style.backgroundColor = isFlagged ? 'white' : 'gray';
+        cell.innerText = isFlagged ? FLAG_ICON : '';
+        turnEnd();
+      };
+
+      const turnEnd = function() {
+        document.getElementById('leftBombCount').innerText =
+          bombCount - document.getElementsByClassName('flag').length;
+
+        const success =
+          document.getElementsByClassName('flag').length === bombCount &&
+          !document.getElementsByClassName('close').length;
+        const failed = document.getElementsByClassName('bomb').length > 0;
+        if (!success && !failed) {
+          return;
+        }
+
+        const marquee = document.createElement('marquee');
+        marquee.loop = 1;
+        marquee.setAttribute('scrollamount', '450');
+        marquee.style = 'position: absolute; left: 0px; top: 0px;';
+
+        const innerText = document.createElement('font');
+        innerText.style = 'font-size: 2000%; font-weight: 900; color: red';
+        innerText.innerText =
+          success && !failed ? '😄'.repeat(5) : 'BOOOOOOOMB!!!';
+
+        marquee.appendChild(innerText);
+        document.body.appendChild(marquee);
+
+        if (failed) {
+          openLeftCells();
+        }
+      };
+
+      const getNeighborIds = function(id) {
+        const neighborIds = [];
+        const row = id.split('-')[0] * 1; // id: row-column
+        const column = id.split('-')[1] * 1;
+        for (let i = row - 1; i <= row + 1; i++) {
+          for (let j = column - 1; j <= column + 1; j++) {
+            const neighborId = i + '-' + j;
+            if (id !== neighborId && valueMaster[neighborId] !== undefined) {
+              neighborIds.push(neighborId);
+            }
+          }
+        }
+        return neighborIds;
+      };
+
+      const openLeftCells = function() {
+        Array.from(document.getElementsByClassName('flag')).forEach(function(
+          cell
+        ) {
+          const value = valueMaster[cell.id];
+          if (value !== BOMB_ICON) {
+            cell.style.backgroundColor = 'yellow';
+            cell.innerText = value;
+          }
+        });
+
+        Array.from(document.getElementsByClassName('close')).forEach(function(
+          cell
+        ) {
+          cell.innerText = valueMaster[cell.id];
+          cell.style.backgroundColor = 'white';
+        });
+      };
+
+      const start = function() {
+        valueMaster = {};
+        for (let row = 0; row < tableSize; row++) {
+          for (let column = 0; column < tableSize; column++) {
+            valueMaster[row + '-' + column] = '';
+          }
+        }
+
+        let createdBombCount = 0;
+        while (createdBombCount < bombCount) {
+          const id =
+            Math.floor(Math.random() * tableSize) +
+            '-' +
+            Math.floor(Math.random() * tableSize);
+          if (valueMaster[id] !== BOMB_ICON) {
+            valueMaster[id] = BOMB_ICON;
+            createdBombCount++;
+            // console.log(id); // for debug
+          }
+        }
+
+        let fragment = document.createDocumentFragment();
+        document.getElementById('field').textContent = '';
+        Object.keys(valueMaster).forEach(function(id) {
+          const td = document.createElement('td');
+          td.id = id;
+          td.width = td.height = 30;
+          td.align = 'center';
+          td.className = 'close';
+          td.style = 'background-color: gray; font-weight: bold;';
+          td.onclick = function() {
+            openCell(id, true);
+          };
+          td.oncontextmenu = function() {
+            flagCell(id);
+            return false;
+          };
+          fragment.appendChild(td);
+
+          if (fragment.childElementCount % tableSize === 0) {
+            const tr = document.createElement('tr');
+            tr.appendChild(fragment);
+            document.getElementById('field').appendChild(tr);
+            fragment = document.createDocumentFragment();
+          }
+
+          if (valueMaster[id] !== BOMB_ICON) {
+            let neighborBombCount = 0;
+            const neighborIds = getNeighborIds(id);
+            neighborIds.forEach(neighborId => {
+              if (valueMaster[neighborId] === BOMB_ICON) {
+                neighborBombCount++;
+              }
+            });
+            valueMaster[id] = neighborBombCount === 0 ? '' : neighborBombCount;
+          }
+        });
+
+        document.getElementById('leftBombCount').innerText = bombCount;
+      };
+      start();
+    </script>
+  </body>
+</html>
