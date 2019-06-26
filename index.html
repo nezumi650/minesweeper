@@ -190,12 +190,23 @@
           document.body.removeChild(marquee);
         }
         Object.keys(valueMaster).forEach(function(id) {
+          if (valueMaster[id] !== BOMB_ICON) {
+            let neighborBombCount = 0;
+            const neighborIds = getNeighborIds(id);
+            neighborIds.forEach(neighborId => {
+              if (valueMaster[neighborId] === BOMB_ICON) {
+                neighborBombCount++;
+              }
+            });
+            valueMaster[id] = neighborBombCount === 0 ? '' : neighborBombCount;
+          }
+
           const td = document.createElement('td');
           td.id = id;
           td.width = td.height = 30;
-          td.align = 'center';
           td.className = 'close';
-          td.style = 'background-color: gray; font-weight: bold;';
+          td.style =
+            'background-color: gray; font-weight: bold; text-align: center;';
           td.onclick = function() {
             openCell(id, true);
           };
@@ -211,18 +222,18 @@
             document.getElementById('field').appendChild(tr);
             fragment = document.createDocumentFragment();
           }
-
-          if (valueMaster[id] !== BOMB_ICON) {
-            let neighborBombCount = 0;
-            const neighborIds = getNeighborIds(id);
-            neighborIds.forEach(neighborId => {
-              if (valueMaster[neighborId] === BOMB_ICON) {
-                neighborBombCount++;
-              }
-            });
-            valueMaster[id] = neighborBombCount === 0 ? '' : neighborBombCount;
-          }
         });
+
+        while (true) {
+          const id =
+            Math.floor(Math.random() * tableSize) +
+            '-' +
+            Math.floor(Math.random() * tableSize);
+          if (!valueMaster[id]) {
+            document.getElementById(id).style = 'background-color: #FFFFCC;';
+            break;
+          }
+        }
 
         document.getElementById('leftBombCount').innerText = bombCount;
       };
